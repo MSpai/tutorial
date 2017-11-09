@@ -9,20 +9,29 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.mpipini.tutorial.Adapters.MoviesAdapter;
+import com.example.mpipini.tutorial.Adapters.GitHubRepoAdapter;
 import com.example.mpipini.tutorial.Interfaces.ClickListener;
+import com.example.mpipini.tutorial.Interfaces.GitHubClient;
 import com.example.mpipini.tutorial.Listeners.RecyclerTouchListener;
+import com.example.mpipini.tutorial.Objects.GitHubRepo;
 import com.example.mpipini.tutorial.Objects.Movie;
 import com.example.mpipini.tutorial.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity {
 
-    private List<Movie> movieList = new ArrayList<>();
+    private List<GitHubRepo> responseList = new ArrayList<>();
     private RecyclerView recyclerView;
-    private MoviesAdapter mAdapter;
+    private GitHubRepoAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,13 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-        prepareMovieData();
-
-        mAdapter = new MoviesAdapter(movieList);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(mAdapter);
+        setRetrofitCall();
 
         //set divider
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -48,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Movie movie = movieList.get(position);
-                Toast.makeText(getApplicationContext(), movie.getTitle() + " is selected!", Toast.LENGTH_SHORT).show();
+                GitHubRepo gitHubRepo = responseList.get(position);
+                Toast.makeText(getApplicationContext(), gitHubRepo.getName() + " is selected!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -60,56 +63,57 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void prepareMovieData() {
-        Movie movie = new Movie("Mad Max: Fury Road", "Action & Adventure", "2015");
-        movieList.add(movie);
+    private void setRetrofitCall() {
+        String API_BASE_URL = "https://api.github.com/";
 
-        movie = new Movie("Inside Out", "Animation, Kids & Family", "2015");
-        movieList.add(movie);
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-        movie = new Movie("Star Wars: Episode VII - The Force Awakens", "Action", "2015");
-        movieList.add(movie);
+        Retrofit.Builder builder =
+                new Retrofit.Builder()
+                        .baseUrl(API_BASE_URL)
+                        .addConverterFactory(
+                                GsonConverterFactory.create()
+                        );
 
-        movie = new Movie("Shaun the Sheep", "Animation", "2015");
-        movieList.add(movie);
+        Retrofit retrofit =
+                builder
+                        .client(
+                                httpClient.build()
+                        )
+                        .build();
 
-        movie = new Movie("The Martian", "Science Fiction & Fantasy", "2015");
-        movieList.add(movie);
+        // Create a very simple REST adapter which points the GitHub API endpoint.
+        GitHubClient client = retrofit.create(GitHubClient.class);
 
-        movie = new Movie("Mission: Impossible Rogue Nation", "Action", "2015");
-        movieList.add(movie);
 
-        movie = new Movie("Up", "Animation", "2009");
-        movieList.add(movie);
+        // Fetch a list of the Github repositories.
+        Call<List<GitHubRepo>> call =
+                client.reposForUser("fs-opensource");
 
-        movie = new Movie("Star Trek", "Science Fiction", "2009");
-        movieList.add(movie);
+        // Execute the call asynchronously. Get a positive or negative callback.
+        call.enqueue(new Callback<List<GitHubRepo>>() {
+            @Override
+            public void onResponse(Call<List<GitHubRepo>> call, Response<List<GitHubRepo>> response) {
+                // The network call was a success and we got a response
+                if(response.isSuccessful()) {
+                    responseList = response.body();
+                    mAdapter = new GitHubRepoAdapter(responseList);
+                    RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+                    recyclerView.setLayoutManager(mLayoutManager);
+                    recyclerView.setItemAnimator(new DefaultItemAnimator());
+                    recyclerView.setAdapter(mAdapter);
+                }else{
+                    Toast.makeText(getApplicationContext(), "Unsuccesfull response", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        movie = new Movie("The LEGO Movie", "Animation", "2014");
-        movieList.add(movie);
+            @Override
+            public void onFailure(Call<List<GitHubRepo>> call, Throwable t) {
+                // the network call was a failure
+                Toast.makeText(getApplicationContext(), "The network call was a failure", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-        movie = new Movie("Iron Man", "Action & Adventure", "2008");
-        movieList.add(movie);
-
-        movie = new Movie("Aliens", "Science Fiction", "1986");
-        movieList.add(movie);
-
-        movie = new Movie("Chicken Run", "Animation", "2000");
-        movieList.add(movie);
-
-        movie = new Movie("Back to the Future", "Science Fiction", "1985");
-        movieList.add(movie);
-
-        movie = new Movie("Raiders of the Lost Ark", "Action & Adventure", "1981");
-        movieList.add(movie);
-
-        movie = new Movie("Goldfinger", "Action & Adventure", "1965");
-        movieList.add(movie);
-
-        movie = new Movie("Guardians of the Galaxy", "Science Fiction & Fantasy", "2014");
-        movieList.add(movie);
-
-       // mAdapter.notifyDataSetChanged();
     }
 
 }
