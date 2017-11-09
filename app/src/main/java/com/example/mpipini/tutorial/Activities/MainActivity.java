@@ -1,5 +1,6 @@
 package com.example.mpipini.tutorial.Activities;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -14,7 +15,6 @@ import com.example.mpipini.tutorial.Interfaces.ClickListener;
 import com.example.mpipini.tutorial.Interfaces.GitHubClient;
 import com.example.mpipini.tutorial.Listeners.RecyclerTouchListener;
 import com.example.mpipini.tutorial.Objects.GitHubRepo;
-import com.example.mpipini.tutorial.Objects.Movie;
 import com.example.mpipini.tutorial.R;
 
 import java.util.ArrayList;
@@ -53,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view, int position) {
                 GitHubRepo gitHubRepo = responseList.get(position);
                 Toast.makeText(getApplicationContext(), gitHubRepo.getName() + " is selected!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+                intent.putExtra("name",gitHubRepo.getName());
+                startActivity(intent);
+
             }
 
             @Override
