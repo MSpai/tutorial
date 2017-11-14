@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view, int position) {
                 GitHubRepo gitHubRepo = responseList.get(position);
-                Toast.makeText(getApplicationContext(), gitHubRepo.getName() + " is selected!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), gitHubRepo.getName() + getString(R.string.selected), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, SecondActivity.class);
                 intent.putExtra("name",gitHubRepo.getName());
                 startActivity(intent);

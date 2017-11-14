@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">tutorial</string>
+    <string name="selected"> is selected!</string>
 </resources>
